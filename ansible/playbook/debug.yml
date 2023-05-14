@@ -1,0 +1,7 @@
+---
+- name: debug learning
+  hosts: web
+  tasks:
+    - name: Print a variable
+      debug:
+        msg: "This is  built in inventory variable: {{ansible_hostname}}"
