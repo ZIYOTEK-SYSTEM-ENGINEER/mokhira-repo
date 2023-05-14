@@ -1,0 +1,17 @@
+---
+- name: Check Disk Space
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Get Disk Space
+      shell: df -h
+      register: disk_space_output
+
+    - name: Save Command Output
+      set_fact:
+        output: "{{ disk_space_output.stdout }}"
+
+    - name: Print Disk Space
+      debug:
+        var: output
