@@ -1,0 +1,25 @@
+---
+- name: Change Bash prompt for existing and future users on CentOS 7 and 8
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Set system-wide default Bash prompt in /etc/skel/.bashrc
+      lineinfile:
+        dest: "/etc/skel/.bashrc"
+        regexp: '^PS1='
+        line: 'PS1="\n\[\e[32m\][\u@\[\e[1;34m\]\h \w]\[\e[m\]\\$ "'
+
+    - name: Set Bash prompt for existing student user
+      lineinfile:
+        dest: "/home/student/.bashrc"
+        regexp: '^PS1='
+        line: 'PS1="\n\[\e[32m\][\u@\[\e[1;34m\]\h \w]\[\e[m\]\\$ "'
+        owner: student
+        group: student
+
+    - name: Set system-wide default Bash prompt in /etc/bashrc (for future users)
+      lineinfile:
+        dest: "/etc/bashrc"
+        regexp: '^PS1='
+        line: 'PS1="\n\[\e[32m\][\u@\[\e[1;34m\]\h \w]\[\e[m\]\\$ "'

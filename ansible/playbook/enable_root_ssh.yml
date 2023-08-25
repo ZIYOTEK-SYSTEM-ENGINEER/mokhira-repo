@@ -1,0 +1,17 @@
+---
+- name: Enable root access over SSH
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Allow root login in SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin yes'
+        backup: yes
+
+    - name: Restart SSH service
+      service:
+        name: sshd
+        state: restarted

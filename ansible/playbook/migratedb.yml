@@ -1,0 +1,30 @@
+---
+- name: Migrate Database from CentOS 7 to CentOS 9
+  hosts: db7
+  gather_facts: false
+
+  tasks:
+    - name: Dump database on CentOS 7
+      command: mysqldump -u root -p password IT > /root/backup.sql
+
+    - name: Copy backup to Ansible control machine
+      fetch:
+        src: /root/backup.sql
+        dest: /tmp/
+        flat: yes
+
+- name: Migrate Database from CentOS 7 to CentOS 9
+  hosts: db8
+  gather_facts: false
+
+  tasks:
+    - name: Create database on CentOS 8
+      command: mysql -u root -p password IT -e "CREATE DATABASE IF NOT EXISTS IT;"
+
+    - name: Copy backup to CentOS 8
+      copy:
+        src: /tmp/backup.sql
+        dest: /root/
+
+    - name: Import database on CentOS 9
+      command: mysql -u root -p password IT < /root/backup.sql

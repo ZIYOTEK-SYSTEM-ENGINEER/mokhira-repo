@@ -1,0 +1,20 @@
+options {
+    listen-on port 53 { 127.0.0.1; 192.168.130.12; };
+    directory "/var/named";
+    allow-query { localhost; 192.168.130.0/24; };
+    allow-transfer { localhost; 192.168.130.13; };
+    also-notify { 192.168.130.14; };
+   
+};
+
+zone "ziyotek3.local" IN {
+    type primary;
+    file "ziyotek.flz";
+    allow-update { none; };
+};
+
+zone "130.168.192.in-addr.arpa" IN {
+    type primary;
+    file "ziyotek.rlz";
+    allow-update { none; };
+};

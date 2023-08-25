@@ -1,0 +1,102 @@
+---
+- name: Install and Configure Nagios Core
+  hosts: nagios
+  become: yes
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - gcc
+        - glibc
+        - glibc-common
+        - gd
+        - gd-devel
+        - make
+        - net-snmp
+        - openssl-devel
+        - httpd
+        - php
+        - unzip
+        - wget
+        - postfix
+        - perl
+      tags: [packages]
+
+    - name: Download Nagios Core source
+      get_url:
+        url: 'https://github.com/NagiosEnterprises/nagioscore/archive/nagios-4.4.5.tar.gz'
+        dest: /tmp/nagioscore.tar.gz
+      tags: [download]
+
+    - name: Extract Nagios Core source
+      unarchive:
+        src: /tmp/nagioscore.tar.gz
+        dest: /tmp
+        remote_src: yes
+      tags: [extract]
+
+    - name: Configure and install Nagios Core
+      shell: |
+        cd /tmp/nagioscore-nagios-4.4.5
+        ./configure
+        make all
+        make install-groups-users
+        usermod -aG nagios apache
+        make install
+        make install-daemoninit
+        systemctl enable httpd.service
+        make install-commandmode
+        make install-config
+        make install-webconf
+      tags: [install]
+
+    - name: Download Nagios Plugins
+      get_url:
+        url: 'http://nagios-plugins.org/download/nagios-plugins-2.3.2.tar.gz'
+        dest: /tmp/nagios-plugins.tar.gz
+      tags: [download]
+
+    - name: Extract Nagios Plugins
+      unarchive:
+        src: /tmp/nagios-plugins.tar.gz
+        dest: /tmp
+        remote_src: yes
+      tags: [extract]
+
+    - name: Configure and install Nagios Plugins
+      shell: |
+        cd /tmp/nagios-plugins-2.3.2
+        ./configure
+        make
+        make install
+      tags: [install]
+
+    - name: Uncomment line 51 in nagios.cfg
+      replace:
+        path: /usr/local/nagios/etc/nagios.cfg
+        regexp: '^#cfg_dir=/usr/local/nagios/etc/servers$'
+        replace: 'cfg_dir=/usr/local/nagios/etc/servers'
+      tags: [configure]
+
+    - name: Create directory for server configurations
+      file:
+        path: /usr/local/nagios/etc/servers
+        state: directory
+      tags: [configure]
+
+    - name: Create Nagios admin user
+      command: htpasswd -b -c /usr/local/nagios/etc/htpasswd.users nagiosadmin password
+      tags: [configure]
+
+    - name: Restart Apache service
+      systemd:
+        name: httpd
+        state: restarted
+      tags: [services]
+
+    - name: Verify Nagios configuration
+      command: /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+      tags: [verify]
+

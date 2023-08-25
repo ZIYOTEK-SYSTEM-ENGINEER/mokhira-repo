@@ -1,0 +1,48 @@
+---
+- name: Install and configure Apache web server on CentOS 7
+  hosts: webserver  # Replace with the target server(s) where you want to install Apache
+  become: true  # To run tasks with root privileges
+
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Check if Apache is installed
+      set_fact:
+        apache_installed: "{{ ansible_facts.packages['httpd'] is defined and ansible_facts.packages['httpd']|length > 0 }}"
+
+    - name: Install Apache if not already installed
+      yum:
+        name: httpd
+        state: present
+      when: not apache_installed
+
+    - name: Ensure Apache is running
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Set ServerName in httpd.conf
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: ServerName webserver
+        state: present
+      notify: Restart Apache
+
+    - name: Create a custom index.html file
+      copy:
+        content: |
+          Welcome to my website
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted
+      

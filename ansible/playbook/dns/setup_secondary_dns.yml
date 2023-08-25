@@ -1,0 +1,41 @@
+---
+- name: Configure Secondary DNS Server
+  hosts: secondarydns
+  become: yes
+  
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - bind
+        - bind-utils
+
+    - name: Configure named.conf
+      template:
+        src: named.conf.j2
+        dest: /etc/named.conf
+
+    - name: Start and enable DNS service
+      service:
+        name: named
+        state: started
+        enabled: yes
+
+    - name: Reload DNS zones
+      command: rndc reload
+      args:
+        chdir: /var/named
+      with_items:
+        - ziyotek3.local
+        - 130.168.192.in-addr.arpa
+
+    - name: Allow DNS ports through firewall
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - "53/tcp"
+        - "53/udp"

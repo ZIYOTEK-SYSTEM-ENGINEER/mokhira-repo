@@ -1,0 +1,53 @@
+---
+- name: Set up AutoFS client and mount NFS shares
+  hosts: ldap
+  tasks:
+    - name: Install NFS-related packages and AutoFS
+      become: true
+      package:
+        name:
+          - nfs-utils
+          - autofs
+        state: present
+
+    - name: Start and enable rpcbind
+      become: true
+      service:
+        name: rpcbind
+        state: started
+        enabled: true
+
+    - name: Configure AutoFS master configuration file
+      become: true
+      lineinfile:
+        path: /etc/auto.master
+        line: |
+          /- /etc/auto.direct  --timeout 60
+          /indirect /etc/auto.indirect --timeout 60
+
+    - name: Create and configure the direct maps
+      become: true
+      copy:
+        content: |
+          /direct -rw,sync  nfs:/var/nfs/direct
+        dest: /etc/auto.direct
+
+    - name: Create the /direct directory
+      become: true
+      file:
+        path: /direct
+        state: directory
+
+    - name: Create and configure the indirect wildcard maps
+      become: true
+      copy:
+        content: |
+          * -rw,sync  nfs:/var/nfs/indirect/&
+        dest: /etc/auto.indirect
+
+    - name: Start and enable the automount service
+      become: true
+      service:
+        name: autofs
+        state: started
+        enabled: true

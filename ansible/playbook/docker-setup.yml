@@ -1,0 +1,25 @@
+---
+- name: Install Docker and required packages
+  hosts: docker
+  become: true
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+        - docker-ce
+        - docker-compose
+        - epel-release
+        - python3-pip
+      when: ansible_distribution == 'CentOS'
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+

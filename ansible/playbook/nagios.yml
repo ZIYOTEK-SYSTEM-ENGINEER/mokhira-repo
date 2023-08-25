@@ -1,0 +1,19 @@
+---
+- name: Install NRPE
+  hosts: all
+  become: yes  # This will enable privilege escalation (sudo) for the tasks
+
+  tasks:
+    - name: Install EPEL repository (for RHEL/CentOS only)
+      yum:
+        name: epel-release
+        state: present
+      when: ansible_os_family == 'RedHat'  # Only run this task on RedHat/CentOS systems
+
+    - name: Install NRPE
+      yum:
+        name: nrpe
+        state: latest
+      # Use 'apt' module instead of 'yum' for Debian/Ubuntu targets
+      when: ansible_os_family == 'RedHat'  # Only run this task on RedHat/CentOS systems
+

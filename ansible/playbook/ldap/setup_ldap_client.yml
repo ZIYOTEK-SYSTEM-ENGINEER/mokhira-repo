@@ -1,0 +1,26 @@
+---
+- hosts: centos7
+  tasks:
+    - name: Install the LDAP client and utilities
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - openldap-clients
+        - nss-pam-ldapd
+      become: true
+
+    - name: Run the TUI utility to configure LDAP client
+      expect:
+        command: authconfig-tui
+        responses:
+          - '.*Use LDAP.*'
+          - '.*Use LDAP Authentication.*'
+          - '.*ldap://192.168.130.28.*'
+          - '.*dc=ziyotek3,dc=local.*'
+      become: true
+
+    - name: Verify authentication to LDAP server
+      command: id {{ ldap_username }}
+      become: true
+      register: ldap_user_info

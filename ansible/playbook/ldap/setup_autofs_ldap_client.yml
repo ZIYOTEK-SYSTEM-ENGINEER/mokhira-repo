@@ -1,0 +1,31 @@
+---
+- name: Configure AutoFS client
+  hosts: all
+  become: yes   
+
+  tasks:
+    - name: Install NFS and AutoFS packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - nfs-utils
+        - autofs
+
+    - name: Add entry to AutoFS master configuration file
+      lineinfile:
+        path: /etc/auto.master
+        line: "/home /etc/auto.home"
+        state: present
+
+    - name: Add LDAP home directory mount configuration to /etc/auto.home
+      lineinfile:
+        path: /etc/auto.home
+        line: "* -rw,sync ldap:/home/&"
+        backup: yes
+
+    - name: Start and enable AutoFS service
+      service:
+        name: autofs
+        state: started
+        enabled: yes

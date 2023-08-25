@@ -1,0 +1,26 @@
+---
+- name: Install EPEL, MariaDB server, MariaDB client on CentOS 8
+  hosts: db8
+  become: true
+
+  tasks:
+    - name: Install EPEL repository package
+      package:
+        name: epel-release
+        state: present
+
+    - name: Install MariaDB Server package
+      package:
+        name: mariadb-server
+        state: present
+
+    - name: Install MariaDB Client package
+      package:
+        name: mariadb
+        state: present
+
+    - name: Start and enable MariaDB service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
