@@ -1,0 +1,52 @@
+---
+- name: Configure Primary DNS Server
+  hosts: primarydns
+  become: yes
+  
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - bind
+        - bind-utils
+        - ntp
+
+    - name: Configure named.conf
+      template:
+        src: named.conf.j2
+        dest: /etc/named.conf
+
+    - name: Create zone files
+      copy:
+        src: "{{ item.src }}"
+        dest: "/var/named/{{ item.dest }}"
+      loop:
+        - { src: "files/ziyotek.flz", dest: "ziyotek.flz" }
+        - { src: "files/ziyotek.rlz", dest: "ziyotek.rlz" }
+
+    - name: Configure Forward Lookup Zone file
+      template:
+        src: ziyotek.flz.j2
+        dest: "/var/named/ziyotek.flz"
+
+    - name: Configure Reverse Lookup Zone file
+      template:
+        src: ziyotek.rlz.j2
+        dest: "/var/named/ziyotek.rlz"
+
+    - name: Start and enable DNS service
+      service:
+        name: named
+        state: started
+        enabled: yes
+
+    - name: Allow DNS ports through firewall
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - "53/tcp"
+        - "53/udp"

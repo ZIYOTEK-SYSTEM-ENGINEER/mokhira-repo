@@ -1,0 +1,57 @@
+---
+- name: Configure Nagios Clients and Services
+  hosts: ftp
+  become: yes
+  
+  tasks:
+    - name: Install EPEL repository
+      yum:
+        name: epel-release
+        state: present
+      
+    - name: Install NRPE and Nagios plugins
+      yum:
+        name: ['nrpe', 'nagios-plugins-all']
+        state: present
+        
+    - name: Configure allowed hosts in NRPE configuration
+      lineinfile:
+        path: /etc/nagios/nrpe.cfg
+        regexp: '^allowed_hosts='
+        line: 'allowed_hosts=127.0.0.1,<192.168.130.27>'
+        
+    - name: Start and enable NRPE service
+      systemd:
+        name: nrpe
+        enabled: yes
+        state: started
+
+    - name: Add NRPE service definitions in Nagios server's configuration
+      copy:
+        dest: "/usr/local/nagios/etc/servers/{{ inventory_hostname }}.cfg"
+        content: |
+          define host {
+            use                     linux-server
+            host_name               {{ inventory_hostname }}
+            alias                   {{ inventory_hostname }}
+            address                 {{ ansible_host }}
+            hostgroups              nagios_clients
+          }
+          
+          define service {
+            use                     generic-service
+            host_name               {{ inventory_hostname }}
+            service_description     PING
+            check_command           check_ping!100.0,20%!500.0,60%
+          }
+          
+          # Add more service definitions as needed
+
+    - name: Verify Nagios configuration
+      command: /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+
+    - name: Restart Nagios service
+      systemd:
+        name: nagios
+        state: restarted
+

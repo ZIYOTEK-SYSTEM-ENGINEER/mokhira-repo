@@ -1,0 +1,22 @@
+---
+- name: Install htop on CentOS 7 and 8 servers
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install EPEL repository on CentOS 7
+      yum:
+        name: epel-release
+        state: present
+      when: ansible_distribution_major_version == "7"
+
+    - name: Install EPEL repository on CentOS 8
+      dnf:
+        name: epel-release
+        state: present
+      when: ansible_distribution_major_version == "8"
+
+    - name: Install htop
+      yum:
+        name: htop
+        state: present

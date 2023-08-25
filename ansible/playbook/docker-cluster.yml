@@ -1,0 +1,42 @@
+---
+- name: Deploy Docker Image on Cluster
+  hosts: docker  
+  become: true
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - httpd
+        - php
+        - mysql
+        - php-mysql
+
+    - name: Start and enable Apache service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Copy lab-app.tgz to /var/www/html
+      get_url:
+        url: "http://aws-tc-largeobjects.s3-us-west-2.amazonaws.com/CUR-TF-200-ACACAD/studentdownload/lab-app.tgz"
+        dest: "/var/www/html/lab-app.tgz"
+
+    - name: Extract lab-app.tgz
+      unarchive:
+        src: "/var/www/html/lab-app.tgz"
+        dest: "/var/www/html"
+        remote_src: yes
+        creates: "/var/www/html/lab-app"
+
+    - name: Set ownership of rds.conf.php
+      file:
+        path: "/var/www/html/rds.conf.php"
+        owner: apache
+        group: root
+        mode: "0644"
+
+

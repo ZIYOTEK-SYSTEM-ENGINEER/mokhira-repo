@@ -1,0 +1,51 @@
+---
+- name: Configure LDAP Client on CentOS 8
+  hosts: centos8
+  become: true
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - openldap-clients
+        - sssd
+        - sssd-ldap
+        - oddjob-mkhomedir
+        - openssl-perl
+      tags: install_packages
+
+    - name: Configure sssd.conf
+      template:
+        src: templates/sssd.conf.j2
+        dest: /etc/sssd/sssd.conf
+      tags: configure_sssd_conf
+
+    - name: Configure ldap.conf
+      template:
+        src: templates/ldap.conf.j2
+        dest: /etc/openldap/ldap.conf
+      tags: configure_ldap_conf
+
+
+    - name: Select and enable sssd
+      command: authselect select sssd with-mkhomedir --force
+      tags: select_authselect
+
+    - name: Enable sssd and oddjobd services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - sssd.service
+        - oddjobd.service
+      tags: enable_services
+
+  handlers:
+    - name: Reload sssd service
+      systemd:
+        name: sssd.service
+        state: restarted
+      tags: reload_sssd_service

@@ -1,0 +1,26 @@
+---
+- name: Disable root SSH access on CentOS 7 and 8
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Backup the SSH config file
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.backup
+        remote_src: yes
+
+    - name: Disable root login via SSH
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?\s*PermitRootLogin\s+'
+        line: 'PermitRootLogin no'
+        state: present
+      notify:
+        - restart sshd
+
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted

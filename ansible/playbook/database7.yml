@@ -1,0 +1,44 @@
+---
+- name: Install MariaDB on CentOS 7 and perform MySQL secure installation
+  hosts: db7
+  become: yes
+
+  tasks:
+    - name: Install epel-release package
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Install MariaDB server package
+      yum:
+        name: mariadb-server
+        state: present
+
+    - name: Start and enable MariaDB service
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Install MariaDB client package
+      yum:
+        name: mariadb
+        state: present
+
+    - name: Set MySQL root password
+      expect:
+        command: mysql_secure_installation
+        responses:
+          "Enter current password for root (enter for none):": "\r"
+          "Set root password? \[Y/n\]": "Y\r"
+          "New password:": "password\r"  
+          "Re-enter new password:": "password\r" 
+          "Remove anonymous users? \[Y/n\]": "\r"
+          "Disallow root login remotely? \[Y/n\]": "\r"
+          "Remove test database and access to it? \[Y/n\]": "N\r"
+          "Reload privilege tables now? \[Y/n\]": "\r"
+      become: yes
+      become_user: root
+      become_method: sudo    
+
+  

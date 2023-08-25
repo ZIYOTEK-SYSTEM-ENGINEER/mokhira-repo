@@ -1,0 +1,17 @@
+$TTL    1D
+@       IN      SOA     prdx-nsprimary301.ziyotek3.local. root.prdx-nsprimary301.ziyotek3.local. (
+                        2017100100
+                        1D
+                        1H
+                        1W
+                        3H )
+
+                       IN      NS      prdx-nsprimary301.ziyotek3.local.
+                       IN      NS      prdx-nsworker302.ziyotek3.local.
+
+prdx-nsprimary301      IN      A       192.168.130.12
+prdx-nsworker302       IN      A       192.168.130.13
+
+prdx-nsprimary301      IN      A       192.168.130.12
+dns1                   IN      CNAME   prdx-nsprimary301.ziyotek3.local.
+dns2                   IN      CNAME   prdx-nsworker302.ziyotek3.local.

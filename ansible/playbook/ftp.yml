@@ -1,0 +1,11 @@
+---
+- name: Install FTP client
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install FTP client package
+      package:
+        name: ftp
+        state: present
+

@@ -1,0 +1,45 @@
+---
+- name: Configure NFS Client and Mount NFS Share
+  hosts: ldap  # Replace 'nfs_clients' with the name of your client host group
+
+  tasks:
+    - name: Install NFS-related packages
+      become: true
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - nfs-utils
+  
+
+    - name: Start and enable necessary services
+      become: true
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      with_items:
+        - rpcbind
+        - nfs-server
+        - nfs-lock
+        - nfs-idmap
+
+    - name: Create mount directory
+      become: true
+      file:
+        path: /clientshare
+        state: directory
+
+    - name: Mount NFS Share
+      become: true
+      mount:
+        src: nfs:/var/nfs/shared  # Replace 'devx-nfs001' with the NFS server's hostname or IP address
+        path: /clientshare
+        fstype: nfs
+        opts: rw,sync,hard,intr  # Replace with the desired mount options
+        state: mounted
+
+    - name: Add entry to /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        line: "nfs:/var/nfs/shared  /clientshare  nfs  rw,sync,hard,intr  0 0"  # Replace with the correct NFS server and mount options

@@ -1,0 +1,42 @@
+---
+- name: Setup LDAP Server
+  hosts: ldap 
+  become: true
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - openldap-servers
+        - openldap-clients
+        - openldap
+        - migrationtools
+      tags: install_packages
+
+    - name: Generate LDAP admin password
+      command: slappasswd
+      register: ldap_admin_password
+      no_log: true
+      tags: generate_password
+
+    - name: Start and enable LDAP service
+      systemd:
+        name: slapd.service
+        enabled: yes
+        state: started
+      tags: start_service
+
+  handlers:
+    - name: Reload firewalld
+      systemd:
+        name: firewalld
+        state: restarted
+      tags: reload_firewall
+
+    - name: Restart slapd service
+      systemd:
+        name: slapd.service
+        state: restarted
+      tags: restart_service

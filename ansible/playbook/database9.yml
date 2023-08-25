@@ -1,0 +1,51 @@
+---
+- name: Install EPEL, MariaDB Server, and MariaDB Client on CentOS 9
+  hosts: db9
+  become: true
+
+  tasks:
+    - name: Install EPEL repository
+      dnf:
+        name: epel-release
+        state: present
+
+    - name: Install MariaDB Server and Client
+      dnf:
+        name:
+          - mariadb-server
+          - mariadb
+        state: latest
+
+    - name: Start and enable MariaDB service
+      systemd:
+        name: mariadb
+        enabled: yes
+        state: started
+
+    - name: Install expect package (if needed)
+      package:
+        name: expect
+        state: present
+
+    - name: Run mysql_secure_installation
+      expect:
+        command: mysql_secure_installation
+        responses:
+          'Enter current password for root (enter for none): ': ''
+          'Change the root password?': 'Y'
+          'New password: ': 'password'
+          'Re-enter new password: ': 'password'
+          'Remove anonymous users?': ''
+          'Disallow root login remotely?': ''
+          'Remove test database and access to it?': 'N'
+          'Reload privilege tables now?': ''
+      environment:
+        MYSQL_PWD: 'password'    
+
+
+
+    
+
+  
+
+

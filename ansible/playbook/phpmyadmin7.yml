@@ -1,0 +1,42 @@
+---
+- name: Install Apache, PHP, and phpMyAdmin on CentOS 7
+  hosts: db7
+  become: yes
+
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+
+    - name: Start Apache service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Install PHP
+      yum:
+        name: php
+        state: present
+
+    - name: Create test.php file
+      copy:
+        content: |
+          <?php
+          // Show all information, defaults to INFO_ALL
+          phpinfo();
+          ?>
+        dest: /var/www/html/test.php
+
+    - name: Install phpMyAdmin
+      yum:
+        name: phpmyadmin
+        state: present
+        enablerepo: epel
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted

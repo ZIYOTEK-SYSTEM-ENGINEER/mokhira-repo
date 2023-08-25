@@ -1,0 +1,46 @@
+---
+- name: Install and configure Apache web server on CentOS 8
+  hosts: webserver8  # Replace with the target server(s) where you want to install Apache
+  become: true  # To run tasks with root privileges
+
+  tasks:
+    - name: Check if Apache is installed
+      command: rpm -q httpd
+      register: apache_installed
+      ignore_errors: yes
+
+    - name: Install Apache if not already installed
+      dnf:
+        name: httpd
+        state: present
+      when: apache_installed.rc != 0
+
+    - name: Ensure Apache is running
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Set ServerName in httpd.conf
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        state: present
+      notify: Restart Apache
+
+    - name: Create a custom index.html file
+      copy:
+        content: |
+          Welcome to my website
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted
+
+
+

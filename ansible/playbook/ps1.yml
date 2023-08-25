@@ -1,0 +1,11 @@
+---
+- name: Set PS1 environment variable
+  hosts: all
+  become: yes
+  vars:
+    ps1: '\n\[\e[32m\][\u@\[\e[1;34m\]\h \w]\[\e[m\]\\$ '
+  tasks:
+    - name: Update .bashrc file
+      lineinfile:
+        path: ~/.bashrc
+        line: 'export PS1="{{ ps1 }}"'
